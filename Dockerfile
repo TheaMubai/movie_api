@@ -1,27 +1,30 @@
-# Use official PHP image with required extensions
 FROM php:8.2-cli
 
-# Install system dependencies
+# Install system dependencies and PHP extensions
 RUN apt-get update && apt-get install -y \
     git curl zip unzip libonig-dev libxml2-dev libzip-dev \
     && docker-php-ext-install pdo pdo_mysql zip
-    
-RUN chmod -R 775 storage bootstrap/cache
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 # Set working directory
-WORKDIR /var/www/html
+WORKDIR /var/www
 
-# Copy Laravel project files into the container
+# Copy app code
 COPY . .
 
-# Install PHP dependencies
+# Install Laravel dependencies
 RUN composer install --no-dev --optimize-autoloader
 
-# Expose the Laravel dev server port
+# Set correct permissions AFTER code is copied
+RUN chmod -R 775 storage bootstrap/cache
+
+# Generate app key (optional, can be done in container instead)
+# RUN php artisan key:generate
+
+# Expose the port Laravel will run on
 EXPOSE 8000
 
-# Start the Laravel dev server
-CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
+# Start the Laravel server
+CMD php artisan serve --host=0.0.0.0 --port=8000
