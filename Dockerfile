@@ -17,15 +17,12 @@ COPY . .
 # Install Laravel dependencies
 RUN composer install --no-dev --optimize-autoloader
 
-# Set correct permissions AFTER code is copied
+# Set permissions
 RUN chmod -R 775 storage bootstrap/cache && \
     chown -R www-data:www-data storage bootstrap/cache
-
-# Generate the Laravel app key
-RUN php artisan config:clear && php artisan key:generate
 
 # Expose the port Laravel will run on
 EXPOSE 8000
 
-# Start the Laravel server
-CMD php artisan serve --host=0.0.0.0 --port=8000
+# Start the Laravel server and run necessary Artisan commands
+CMD php artisan config:clear && php artisan key:generate && php artisan serve --host=0.0.0.0 --port=8000
