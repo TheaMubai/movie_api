@@ -14,8 +14,8 @@ class Movie extends Model
         'movie_name',
     ];
 
-    public function types()
+    public function versions()
     {
-        return $this->hasMany(Type::class);
+        return $this->hasMany(Version::class);
     }
 }

@@ -10,26 +10,31 @@ class MovieController extends Controller
 {
     public function index()
     {
-        $movies = Movie::with('types.seasons.episodes')->get();
+        // Eager load the necessary relationships
+        $movies = Movie::with('versions.seasons.episodes')->get();
 
+        // Format and return the movie data
         $data = $movies->map(function ($movie) {
             return [
                 'movie_logo' => $movie->movie_logo,
                 'movie_name' => $movie->movie_name,
-                'type' => $movie->types->map(function ($type) {
+                'type' => $movie->versions->map(function ($version) {
                     $seasons = [];
-                    foreach ($type->seasons as $season) {
+
+                    foreach ($version->seasons as $season) {
                         $episodes = $season->episodes->map(function ($ep) {
                             return [
                                 'episode' => $ep->episode,
-                                'link' => $ep->link
+                                'link' => $ep->link,
                             ];
                         });
+
                         $seasons[$season->season_number] = $episodes;
                     }
+
                     return [
-                        'version' => $type->version,
-                        'season' => $seasons
+                        'version' => $version->version_name,
+                        'season' => $seasons,
                     ];
                 }),
             ];
