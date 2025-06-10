@@ -23,5 +23,5 @@ RUN chmod -R 755 /var/www/storage /var/www/bootstrap/cache
 # Expose port 8000
 EXPOSE 8000
 
-# Run migrations & seed, then start the Laravel server
-CMD php artisan migrate:fresh --seed --force && php artisan serve --host=0.0.0.0 --port=8000
+# Start the Laravel server (NO migrations here)
+CMD php artisan serve --host=0.0.0.0 --port=8000
