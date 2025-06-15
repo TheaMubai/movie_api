@@ -24,4 +24,5 @@ RUN chmod -R 755 /var/www/storage /var/www/bootstrap/cache
 EXPOSE 8000
 
 # Start the Laravel server (NO migrations here)
-CMD php artisan serve --host=0.0.0.0 --port=8000
+#CMD php artisan serve --host=0.0.0.0 --port=8000
+CMD php artisan serve --host=0.0.0.0 --port=10000
