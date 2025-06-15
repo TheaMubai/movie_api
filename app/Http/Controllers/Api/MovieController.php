@@ -8,6 +8,7 @@ use App\Models\Version;
 use App\Models\Season;
 use App\Models\Episode;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class MovieController extends Controller
 {
@@ -34,17 +35,25 @@ class MovieController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'movie_logo' => 'required|string',
+            'movie_logo' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'movie_name' => 'required|string',
             'types' => 'required|array',
         ]);
 
-        $movie = Movie::create($request->only('movie_logo', 'movie_name'));
+        // Store the uploaded image to 'public/images' and get path
+        $path = $request->file('movie_logo')->store('public/images');
+        $url = Storage::url($path); // This will give /storage/images/filename.jpg
+
+        $movie = Movie::create([
+            'movie_logo' => asset($url),
+            'movie_name' => $request->movie_name,
+        ]);
 
         $this->syncVersions($movie, $request->types);
 
         return response()->json(['message' => 'Movie created successfully', 'movie_id' => $movie->id], 201);
     }
+
 
     // Update a movie by ID
     public function update(Request $request, $id)
