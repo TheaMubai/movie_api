@@ -18,26 +18,23 @@ class MovieSeeder extends Seeder
     public function run(): void
     {
         $movie = Movie::create([
-            'movie_logo' => URL::to('/image/soulLand.png'),
-            'movie_name' => 'Soul Land',
+            'movie_logo' => URL::to('/image/battle through the heavens.png'),
+            'movie_name' => 'battle through the heavens',
         ]);
 
         $types = [
             'original' => [
                 1 => [
-                    ['episode' => 1, 'link' => 'https://youtu.be/M7lE49GNbf4?si=ZLhKpyrdYeNB3iRe'],
-                    ['episode' => 2, 'link' => 'https://youtu.be/g61Iwi4Ny44?si=ESetag5UUCIXHODf'],
-                ],
-                2 => [
-                    ['episode' => 1, 'link' => 'https://youtu.be/JpSyQmPZ1uk?si=fBX34_yO8tkrqthW'],
+                    ['episode' => 1, 'link' => 'https://youtu.be/gSgyw2-WchI?si=9udhrBkkp4dhJ-qs'],
+                    ['episode' => 2, 'link' => 'https://youtu.be/UMU-ZFpjUkA?si=-LX-NEjJ0w4HYL99'],
+                    ['episode' => 3, 'link' => 'https://youtu.be/1FJyYLsxIi4?si=qRXcBHO7XdDyCtUU'],
                 ],
             ],
             'khmer' => [
                 1 => [
-                    ['episode' => 1, 'link' => 'https://youtu.be/R6eq2JfEg7Q?si=PL28_6dI3yQkS66v'],
-                ],
-                2 => [
-                    ['episode' => 1, 'link' => 'https://youtu.be/MgQ5zaSXowY?si=sioJD4eNQbHtO5v7'],
+                    ['episode' => 1, 'link' => 'https://youtu.be/zKkP64tdOHE?si=RFquOXZEprGF2Xvt'],
+                    ['episode' => 2, 'link' => 'https://youtu.be/udSPK8Ym9sQ?si=KflbEKUZvZhwVU2G'],
+                    ['episode' => 3, 'link' => 'https://youtu.be/H4uxBtCYzmM?si=-lFR-I4kPnSntmFr'],
                 ],
             ],
         ];
