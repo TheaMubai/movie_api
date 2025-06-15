@@ -159,90 +159,167 @@ class MovieController extends Controller
 
         return response()->json(['message' => 'Episodes added successfully']);
     }
-    public function addSeason(Request $request, $movie_id, $version_name)
+    // public function addSeason(Request $request, $movie_id, $version_name)
+    // {
+    //     $request->validate([
+    //         'season_number' => 'required|integer',
+    //         'episodes' => 'required|array',
+    //         'episodes.*.episode' => 'required|integer',
+    //         'episodes.*.link' => 'required|url',
+    //     ]);
+
+    //     $movie = Movie::findOrFail($movie_id);
+
+    //     $version = $movie->versions()->where('version_name', $version_name)->firstOrFail();
+
+    //     // Check if the season already exists
+    //     $existingSeason = $version->seasons()->where('season_number', $request->season_number)->first();
+    //     if ($existingSeason) {
+    //         return response()->json(['message' => 'Season already exists'], 409);
+    //     }
+
+    //     // Create the new season
+    //     $season = $version->seasons()->create([
+    //         'season_number' => $request->season_number,
+    //     ]);
+
+    //     // Add episodes to the new season
+    //     foreach ($request->episodes as $ep) {
+    //         $season->episodes()->create([
+    //             'episode' => $ep['episode'],
+    //             'link' => $ep['link'],
+    //         ]);
+    //     }
+
+    //     return response()->json(['message' => 'New season and episodes added successfully']);
+    // }
+    // public function addVersion(Request $request, $movie_id)
+    // {
+    //     $request->validate([
+    //         'version_name' => 'required|string|unique:versions,version_name,NULL,id,movie_id,' . $movie_id,
+    //         'seasons' => 'nullable|array',
+    //         'seasons.*.season_number' => 'required|integer',
+    //         'seasons.*.episodes' => 'required|array',
+    //         'seasons.*.episodes.*.episode' => 'required|integer',
+    //         'seasons.*.episodes.*.link' => 'required|url',
+    //     ]);
+
+    //     $movie = Movie::findOrFail($movie_id);
+
+    //     // Create new version
+    //     $version = $movie->versions()->create([
+    //         'version_name' => $request->version_name,
+    //     ]);
+
+    //     // Add optional seasons + episodes
+    //     if ($request->has('seasons')) {
+    //         foreach ($request->seasons as $seasonData) {
+    //             $season = $version->seasons()->create([
+    //                 'season_number' => $seasonData['season_number'],
+    //             ]);
+
+    //             foreach ($seasonData['episodes'] as $ep) {
+    //                 $season->episodes()->create([
+    //                     'episode' => $ep['episode'],
+    //                     'link' => $ep['link'],
+    //                 ]);
+    //             }
+    //         }
+    //     }
+
+    //     return response()->json(['message' => 'New version added successfully']);
+    // }
+    // public function updateEpisode(Request $request, $movie_id, $version_id, $season_id, $episode_id)
+    // {
+    //     $request->validate([
+    //         'episode' => 'required|integer',
+    //         'link' => 'required|url',
+    //     ]);
+
+    //     // Ensure relationships are valid
+    //     $movie = Movie::findOrFail($movie_id);
+    //     $version = $movie->versions()->where('id', $version_id)->firstOrFail();
+    //     $season = $version->seasons()->where('id', $season_id)->firstOrFail();
+    //     $episode = $season->episodes()->where('id', $episode_id)->firstOrFail();
+
+    //     // Update episode
+    //     $episode->update([
+    //         'episode' => $request->episode,
+    //         'link' => $request->link,
+    //     ]);
+
+    //     return response()->json(['message' => 'Episode updated successfully']);
+    // }
+    // public function updateVersion(Request $request, $movie_id, $version_id)
+    // {
+    //     $request->validate([
+    //         'version_name' => 'required|string',
+    //     ]);
+
+    //     $movie = Movie::findOrFail($movie_id);
+    //     $version = $movie->versions()->where('id', $version_id)->firstOrFail();
+
+    //     $version->update([
+    //         'version_name' => $request->version_name,
+    //     ]);
+
+    //     return response()->json(['message' => 'Version updated successfully']);
+    // }
+    // public function updateSeason(Request $request, $movie_id, $version_id, $season_id)
+    // {
+    //     $request->validate([
+    //         'season_number' => 'required|integer',
+    //     ]);
+
+    //     $movie = Movie::findOrFail($movie_id);
+    //     $version = $movie->versions()->where('id', $version_id)->firstOrFail();
+    //     $season = $version->seasons()->where('id', $season_id)->firstOrFail();
+
+    //     $season->update([
+    //         'season_number' => $request->season_number,
+    //     ]);
+
+    //     return response()->json(['message' => 'Season updated successfully']);
+    // }
+    public function updateVersion(Request $request, $movie_id, $version_name)
+    {
+        $request->validate([
+            'version_name' => 'required|string',
+        ]);
+
+        $movie = Movie::findOrFail($movie_id);
+        $version = $movie->versions()->where('version_name', $version_name)->firstOrFail();
+
+        $version->update(['version_name' => $request->version_name]);
+
+        return response()->json(['message' => 'Version updated successfully']);
+    }
+    public function updateSeason(Request $request, $movie_id, $version_name, $season_number)
     {
         $request->validate([
             'season_number' => 'required|integer',
-            'episodes' => 'required|array',
-            'episodes.*.episode' => 'required|integer',
-            'episodes.*.link' => 'required|url',
         ]);
 
         $movie = Movie::findOrFail($movie_id);
-
         $version = $movie->versions()->where('version_name', $version_name)->firstOrFail();
+        $season = $version->seasons()->where('season_number', $season_number)->firstOrFail();
 
-        // Check if the season already exists
-        $existingSeason = $version->seasons()->where('season_number', $request->season_number)->first();
-        if ($existingSeason) {
-            return response()->json(['message' => 'Season already exists'], 409);
-        }
+        $season->update(['season_number' => $request->season_number]);
 
-        // Create the new season
-        $season = $version->seasons()->create([
-            'season_number' => $request->season_number,
-        ]);
-
-        // Add episodes to the new season
-        foreach ($request->episodes as $ep) {
-            $season->episodes()->create([
-                'episode' => $ep['episode'],
-                'link' => $ep['link'],
-            ]);
-        }
-
-        return response()->json(['message' => 'New season and episodes added successfully']);
+        return response()->json(['message' => 'Season updated successfully']);
     }
-    public function addVersion(Request $request, $movie_id)
-    {
-        $request->validate([
-            'version_name' => 'required|string|unique:versions,version_name,NULL,id,movie_id,' . $movie_id,
-            'seasons' => 'nullable|array',
-            'seasons.*.season_number' => 'required|integer',
-            'seasons.*.episodes' => 'required|array',
-            'seasons.*.episodes.*.episode' => 'required|integer',
-            'seasons.*.episodes.*.link' => 'required|url',
-        ]);
-
-        $movie = Movie::findOrFail($movie_id);
-
-        // Create new version
-        $version = $movie->versions()->create([
-            'version_name' => $request->version_name,
-        ]);
-
-        // Add optional seasons + episodes
-        if ($request->has('seasons')) {
-            foreach ($request->seasons as $seasonData) {
-                $season = $version->seasons()->create([
-                    'season_number' => $seasonData['season_number'],
-                ]);
-
-                foreach ($seasonData['episodes'] as $ep) {
-                    $season->episodes()->create([
-                        'episode' => $ep['episode'],
-                        'link' => $ep['link'],
-                    ]);
-                }
-            }
-        }
-
-        return response()->json(['message' => 'New version added successfully']);
-    }
-    public function updateEpisode(Request $request, $movie_id, $version_id, $season_id, $episode_id)
+    public function updateEpisode(Request $request, $movie_id, $version_name, $season_number, $episode_id)
     {
         $request->validate([
             'episode' => 'required|integer',
             'link' => 'required|url',
         ]);
 
-        // Ensure relationships are valid
         $movie = Movie::findOrFail($movie_id);
-        $version = $movie->versions()->where('id', $version_id)->firstOrFail();
-        $season = $version->seasons()->where('id', $season_id)->firstOrFail();
+        $version = $movie->versions()->where('version_name', $version_name)->firstOrFail();
+        $season = $version->seasons()->where('season_number', $season_number)->firstOrFail();
         $episode = $season->episodes()->where('id', $episode_id)->firstOrFail();
 
-        // Update episode
         $episode->update([
             'episode' => $request->episode,
             'link' => $request->link,
@@ -250,35 +327,120 @@ class MovieController extends Controller
 
         return response()->json(['message' => 'Episode updated successfully']);
     }
-    public function updateVersion(Request $request, $movie_id, $version_id)
+    public function addVersion(Request $request, $movie_id)
     {
         $request->validate([
-            'version_name' => 'required|string',
+            'version_name' => 'required|string|unique:versions,version_name,NULL,id,movie_id,' . $movie_id,
         ]);
 
         $movie = Movie::findOrFail($movie_id);
-        $version = $movie->versions()->where('id', $version_id)->firstOrFail();
 
-        $version->update([
+        $version = $movie->versions()->create([
             'version_name' => $request->version_name,
         ]);
 
-        return response()->json(['message' => 'Version updated successfully']);
+        return response()->json(['message' => 'Version added successfully', 'version' => $version]);
     }
-    public function updateSeason(Request $request, $movie_id, $version_id, $season_id)
+    public function addSeason(Request $request, $movie_id, $version_name)
     {
         $request->validate([
             'season_number' => 'required|integer',
         ]);
 
         $movie = Movie::findOrFail($movie_id);
-        $version = $movie->versions()->where('id', $version_id)->firstOrFail();
-        $season = $version->seasons()->where('id', $season_id)->firstOrFail();
+        $version = $movie->versions()->where('version_name', $version_name)->firstOrFail();
 
-        $season->update([
+        $season = $version->seasons()->create([
             'season_number' => $request->season_number,
         ]);
 
-        return response()->json(['message' => 'Season updated successfully']);
+        return response()->json(['message' => 'Season added successfully', 'season' => $season]);
+    }
+    public function deleteVersion($movie_id, $version_name)
+    {
+        $movie = Movie::findOrFail($movie_id);
+        $version = $movie->versions()->where('version_name', $version_name)->firstOrFail();
+
+        // Delete all related seasons and episodes
+        foreach ($version->seasons as $season) {
+            $season->episodes()->delete();
+        }
+        $version->seasons()->delete();
+        $version->delete();
+
+        return response()->json(['message' => 'Version deleted successfully']);
+    }
+    public function deleteSeason($movie_id, $version_name, $season_number)
+    {
+        $movie = Movie::findOrFail($movie_id);
+        $version = $movie->versions()->where('version_name', $version_name)->firstOrFail();
+        $season = $version->seasons()->where('season_number', $season_number)->firstOrFail();
+
+        $season->episodes()->delete();
+        $season->delete();
+
+        return response()->json(['message' => 'Season deleted successfully']);
+    }
+    public function deleteEpisode($movie_id, $version_name, $season_number, $episode_id)
+    {
+        $movie = Movie::findOrFail($movie_id);
+        $version = $movie->versions()->where('version_name', $version_name)->firstOrFail();
+        $season = $version->seasons()->where('season_number', $season_number)->firstOrFail();
+        $episode = $season->episodes()->where('id', $episode_id)->firstOrFail();
+
+        $episode->delete();
+
+        return response()->json(['message' => 'Episode deleted successfully']);
+    }
+    public function showVersion($movie_id, $version_name)
+    {
+        $movie = Movie::findOrFail($movie_id);
+        $version = $movie->versions()->where('version_name', $version_name)->with('seasons.episodes')->firstOrFail();
+
+        return response()->json([
+            'version_name' => $version->version_name,
+            'seasons' => $version->seasons->map(function ($season) {
+                return [
+                    'season_number' => $season->season_number,
+                    'episodes' => $season->episodes->map(function ($ep) {
+                        return [
+                            'episode_id' => $ep->id,
+                            'episode' => $ep->episode,
+                            'link' => $ep->link,
+                        ];
+                    }),
+                ];
+            }),
+        ]);
+    }
+    public function showSeason($movie_id, $version_name, $season_number)
+    {
+        $movie = Movie::findOrFail($movie_id);
+        $version = $movie->versions()->where('version_name', $version_name)->firstOrFail();
+        $season = $version->seasons()->where('season_number', $season_number)->with('episodes')->firstOrFail();
+
+        return response()->json([
+            'season_number' => $season->season_number,
+            'episodes' => $season->episodes->map(function ($ep) {
+                return [
+                    'episode_id' => $ep->id,
+                    'episode' => $ep->episode,
+                    'link' => $ep->link,
+                ];
+            }),
+        ]);
+    }
+    public function showEpisode($movie_id, $version_name, $season_number, $episode_id)
+    {
+        $movie = Movie::findOrFail($movie_id);
+        $version = $movie->versions()->where('version_name', $version_name)->firstOrFail();
+        $season = $version->seasons()->where('season_number', $season_number)->firstOrFail();
+        $episode = $season->episodes()->where('id', $episode_id)->firstOrFail();
+
+        return response()->json([
+            'episode_id' => $episode->id,
+            'episode' => $episode->episode,
+            'link' => $episode->link,
+        ]);
     }
 }
