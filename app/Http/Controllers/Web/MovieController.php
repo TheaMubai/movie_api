@@ -11,16 +11,33 @@ use Illuminate\Support\Facades\URL;
 class MovieController extends Controller
 {
     // Show all movies page (Blade)
-    public function index()
-    {
-        $movies = Movie::with('versions.seasons.episodes')->get();
+    // public function index()
+    // {
+    //     $movies = Movie::with('versions.seasons.episodes')->get();
 
-        $data = $movies->map(function ($movie) {
+    //     $data = $movies->map(function ($movie) {
+    //         return $this->formatMovie($movie);
+    //     });
+
+    //     // Pass as array (not JSON)
+    //     return view('movies.index', ['movies' => $data]);
+    // }
+    public function index(Request $request)
+    {
+        $query = Movie::with('versions.seasons.episodes');
+
+        if ($request->has('search') && !empty($request->search)) {
+            $query->where('movie_name', 'like', '%' . $request->search . '%');
+        }
+
+        $movies = $query->get();
+
+        // Format data like the Blade expects
+        $formattedMovies = $movies->map(function ($movie) {
             return $this->formatMovie($movie);
         });
 
-        // Pass as array (not JSON)
-        return view('movies.index', ['movies' => $data]);
+        return view('movies.index', ['movies' => $formattedMovies]);
     }
 
     // Show single movie detail page (Blade)
@@ -354,16 +371,47 @@ class MovieController extends Controller
             ->with('success', 'Episode updated successfully!');
     }
 
-    // Helper to format movie structure for views
+    //Helper to format movie structure for views
+    // private function formatMovie($movie)
+    // {
+    //     return [
+    //         'movie_id' => $movie->id,
+    //         'movie_logo' => $movie->movie_logo,
+    //         'movie_name' => $movie->movie_name,
+    //         'type' => $movie->versions->map(function ($version) {
+    //             $seasonData = [];
+    //             foreach ($version->seasons as $season) {
+    //                 $seasonData[$season->season_number] = [
+    //                     'season_id' => $season->id,
+    //                     'episodes' => $season->episodes->map(function ($ep) {
+    //                         return [
+    //                             'episode_id' => $ep->id,
+    //                             'episode' => $ep->episode,
+    //                             'link' => $ep->link,
+    //                         ];
+    //                     }),
+    //                 ];
+    //             }
+
+    //             return [
+    //                 'version_id' => $version->id,
+    //                 'version' => $version->version_name,
+    //                 'season' => $seasonData,
+    //             ];
+    //         }),
+    //     ];
+    // }
     private function formatMovie($movie)
     {
+        if (!$movie->versions) return [];
+
         return [
             'movie_id' => $movie->id,
             'movie_logo' => $movie->movie_logo,
             'movie_name' => $movie->movie_name,
             'type' => $movie->versions->map(function ($version) {
                 $seasonData = [];
-                foreach ($version->seasons as $season) {
+                foreach ($version->seasons ?? [] as $season) {
                     $seasonData[$season->season_number] = [
                         'season_id' => $season->id,
                         'episodes' => $season->episodes->map(function ($ep) {
@@ -384,6 +432,7 @@ class MovieController extends Controller
             }),
         ];
     }
+
 
     // Helper to sync versions/seasons/episodes on create or update
     private function syncVersions($movie, $types)

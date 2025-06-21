@@ -5,7 +5,18 @@
     <h1 class="mb-4">Movies List</h1>
 
     <a href="{{ url('/movies/create') }}" class="btn btn-primary mb-3">Add New Movie</a>
-    
+    <form action="{{ url('/movies') }}" method="GET" class="row g-2 mb-3">
+    <div class="col-md-4">
+        <input type="text" name="search" value="{{ request('search') }}" class="form-control" placeholder="Search movie by name...">
+    </div>
+    <div class="col-md-2">
+        <button type="submit" class="btn btn-primary w-100">Search</button>
+    </div>
+    <div class="col-md-2">
+        <a href="{{ url('/movies') }}" class="btn btn-secondary w-100">Reset</a>
+    </div>
+</form>
+
     @foreach ($movies as $movie)
         <div class="card mb-4">
             <div class="card-body">
