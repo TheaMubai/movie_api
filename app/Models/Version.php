@@ -11,7 +11,7 @@ class Version extends Model
 
     protected $fillable = [
         'movie_id',
-        'version',
+        'version_name',
     ];
 
     public function movie()
