@@ -82,30 +82,35 @@ class MovieController extends Controller
     }
 
     // Update movie (handle PUT)
+
     public function update(Request $request, $id)
     {
         $request->validate([
             'movie_name' => 'required|string',
             'movie_logo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-            'types' => 'nullable|string', // only update nested if provided
+            'types' => 'nullable|string', // Optional, but must be valid JSON if present
         ]);
 
         $movie = Movie::findOrFail($id);
 
-        $data = ['movie_name' => $request->movie_name];
+        $data = [
+            'movie_name' => $request->movie_name,
+        ];
 
-        // ✅ If a new logo is uploaded
+        // ✅ If a new logo is uploaded, store it and set full global URL
         if ($request->hasFile('movie_logo')) {
             $filename = time() . '_' . $request->file('movie_logo')->getClientOriginalName();
             $request->file('movie_logo')->move(public_path('image'), $filename);
             $data['movie_logo'] = URL::to('/image/' . $filename);
         }
 
+        // Update movie name (and logo if uploaded)
         $movie->update($data);
 
-        // ✅ Optionally update nested versions/seasons/episodes
-        if ($request->has('types')) {
+        // ✅ Handle nested structure (versions, seasons, episodes)
+        if ($request->filled('types')) {
             $types = json_decode($request->input('types'), true);
+
             if (!is_array($types)) {
                 return back()->with('error', 'Invalid JSON format in Movie Types field.');
             }
@@ -119,7 +124,7 @@ class MovieController extends Controller
             }
             $movie->versions()->delete();
 
-            // Recreate nested data
+            // Recreate new nested structure
             $this->syncVersions($movie, $types);
         }
 
