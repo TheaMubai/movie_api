@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
+use Illuminate\Support\Facades\File;
 
 class MovieController extends Controller
 {
@@ -58,6 +59,36 @@ class MovieController extends Controller
 
     // Store new movie (handle POST)
 
+    // public function store(Request $request)
+    // {
+    //     $request->validate([
+    //         'movie_logo' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+    //         'movie_name' => 'required|string',
+    //         'types' => 'required|string',
+    //     ]);
+
+    //     $types = json_decode($request->input('types'), true);
+
+    //     if (!is_array($types)) {
+    //         return back()->with('error', 'Invalid JSON format in Movie Types field.');
+    //     }
+
+    //     // Move image to public/image/
+    //     $filename = time() . '_' . $request->file('movie_logo')->getClientOriginalName();
+    //     $request->file('movie_logo')->move(public_path('image'), $filename);
+
+    //     // ✅ Use global domain from APP_URL instead of local request
+    //     $url = config('app.url') . '/image/' . $filename;
+
+    //     $movie = Movie::create([
+    //         'movie_logo' => $url,
+    //         'movie_name' => $request->movie_name,
+    //     ]);
+
+    //     $this->syncVersions($movie, $types);
+
+    //     return redirect('/movies')->with('success', 'Movie created successfully!');
+    // }
     public function store(Request $request)
     {
         $request->validate([
@@ -72,15 +103,11 @@ class MovieController extends Controller
             return back()->with('error', 'Invalid JSON format in Movie Types field.');
         }
 
-        // Move image to public/image/
-        $filename = time() . '_' . $request->file('movie_logo')->getClientOriginalName();
-        $request->file('movie_logo')->move(public_path('image'), $filename);
-
-        // ✅ Use global domain from APP_URL instead of local request
-        $url = config('app.url') . '/image/' . $filename;
+        // ✅ Upload to Cloudinary instead of saving to public/image
+        $uploadedFileUrl = Cloudinary::upload($request->file('movie_logo')->getRealPath())->getSecurePath();
 
         $movie = Movie::create([
-            'movie_logo' => $url,
+            'movie_logo' => $uploadedFileUrl,  // Cloudinary full URL
             'movie_name' => $request->movie_name,
         ]);
 
@@ -88,6 +115,7 @@ class MovieController extends Controller
 
         return redirect('/movies')->with('success', 'Movie created successfully!');
     }
+
 
 
 
@@ -131,59 +159,6 @@ class MovieController extends Controller
         return view('movies.edit', ['movie' => $movieData]);
     }
 
-    public function update(Request $request, $id)
-    {
-        $request->validate([
-            'movie_name' => 'required|string',
-            'movie_logo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-            'types' => 'nullable|string', // Optional, but must be valid JSON if present
-        ]);
-
-        $movie = Movie::findOrFail($id);
-
-        $data = [
-            'movie_name' => $request->movie_name,
-        ];
-
-        // ✅ If a new logo is uploaded, store it and set full global URL
-        if ($request->hasFile('movie_logo')) {
-            $filename = time() . '_' . $request->file('movie_logo')->getClientOriginalName();
-            $request->file('movie_logo')->move(public_path('image'), $filename);
-
-            // 👇 Use global APP_URL instead of local URL::to()
-            $data['movie_logo'] = config('app.url') . '/image/' . $filename;
-            // or: $data['movie_logo'] = env('APP_URL') . '/image/' . $filename;
-        }
-
-        // Update movie name (and logo if uploaded)
-        $movie->update($data);
-
-        // ✅ Handle nested structure (versions, seasons, episodes)
-        if ($request->filled('types')) {
-            $types = json_decode($request->input('types'), true);
-
-            if (!is_array($types)) {
-                return back()->with('error', 'Invalid JSON format in Movie Types field.');
-            }
-
-            // Delete old nested data
-            foreach ($movie->versions as $version) {
-                foreach ($version->seasons as $season) {
-                    $season->episodes()->delete();
-                }
-                $version->seasons()->delete();
-            }
-            $movie->versions()->delete();
-
-            // Recreate new nested structure
-            $this->syncVersions($movie, $types);
-        }
-
-        return redirect('/movies')->with('success', 'Movie updated successfully!');
-    }
-
-
-
     // public function update(Request $request, $id)
     // {
     //     $request->validate([
@@ -202,7 +177,10 @@ class MovieController extends Controller
     //     if ($request->hasFile('movie_logo')) {
     //         $filename = time() . '_' . $request->file('movie_logo')->getClientOriginalName();
     //         $request->file('movie_logo')->move(public_path('image'), $filename);
-    //         $data['movie_logo'] = URL::to('/image/' . $filename);
+
+    //         // 👇 Use global APP_URL instead of local URL::to()
+    //         $data['movie_logo'] = config('app.url') . '/image/' . $filename;
+    //         // or: $data['movie_logo'] = env('APP_URL') . '/image/' . $filename;
     //     }
 
     //     // Update movie name (and logo if uploaded)
@@ -231,6 +209,38 @@ class MovieController extends Controller
 
     //     return redirect('/movies')->with('success', 'Movie updated successfully!');
     // }
+
+    public function update(Request $request, $id)
+    {
+        $request->validate([
+            'movie_logo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'movie_name' => 'required|string',
+            'types' => 'required|string',
+        ]);
+
+        $movie = Movie::findOrFail($id);
+
+        $types = json_decode($request->input('types'), true);
+        if (!is_array($types)) {
+            return back()->with('error', 'Invalid JSON format in Movie Types field.');
+        }
+
+        // ✅ Upload new logo to Cloudinary if provided
+        if ($request->hasFile('movie_logo')) {
+            // Optional: Delete old image if needed (advanced Cloudinary API usage)
+            // Upload new image
+            $uploadedFileUrl = Cloudinary::upload($request->file('movie_logo')->getRealPath())->getSecurePath();
+            $movie->movie_logo = $uploadedFileUrl;
+        }
+
+        $movie->movie_name = $request->movie_name;
+        $movie->save();
+
+        // ✅ Sync movie versions/seasons/episodes if needed
+        $this->syncVersions($movie, $types);
+
+        return redirect('/movies')->with('success', 'Movie updated successfully!');
+    }
 
 
 
