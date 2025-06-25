@@ -59,36 +59,36 @@ class MovieController extends Controller
 
     // Store new movie (handle POST)
 
-    // public function store(Request $request)
-    // {
-    //     $request->validate([
-    //         'movie_logo' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-    //         'movie_name' => 'required|string',
-    //         'types' => 'required|string',
-    //     ]);
+    public function store(Request $request)
+    {
+        $request->validate([
+            'movie_logo' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'movie_name' => 'required|string',
+            'types' => 'required|string',
+        ]);
 
-    //     $types = json_decode($request->input('types'), true);
+        $types = json_decode($request->input('types'), true);
 
-    //     if (!is_array($types)) {
-    //         return back()->with('error', 'Invalid JSON format in Movie Types field.');
-    //     }
+        if (!is_array($types)) {
+            return back()->with('error', 'Invalid JSON format in Movie Types field.');
+        }
 
-    //     // Move image to public/image/
-    //     $filename = time() . '_' . $request->file('movie_logo')->getClientOriginalName();
-    //     $request->file('movie_logo')->move(public_path('image'), $filename);
+        // Move image to public/image/
+        $filename = time() . '_' . $request->file('movie_logo')->getClientOriginalName();
+        $request->file('movie_logo')->move(public_path('image'), $filename);
 
-    //     // ✅ Use global domain from APP_URL instead of local request
-    //     $url = config('app.url') . '/image/' . $filename;
+        // ✅ Use global domain from APP_URL instead of local request
+        $url = config('app.url') . '/image/' . $filename;
 
-    //     $movie = Movie::create([
-    //         'movie_logo' => $url,
-    //         'movie_name' => $request->movie_name,
-    //     ]);
+        $movie = Movie::create([
+            'movie_logo' => $url,
+            'movie_name' => $request->movie_name,
+        ]);
 
-    //     $this->syncVersions($movie, $types);
+        $this->syncVersions($movie, $types);
 
-    //     return redirect('/movies')->with('success', 'Movie created successfully!');
-    // }
+        return redirect('/movies')->with('success', 'Movie created successfully!');
+    }
     // public function store(Request $request)
     // {
     //     $request->validate([
@@ -116,36 +116,36 @@ class MovieController extends Controller
     //     return redirect('/movies')->with('success', 'Movie created successfully!');
     // }
 
-    public function store(Request $request)
-    {
-        $request->validate([
-            'movie_logo' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-            'movie_name' => 'required|string',
-            'types' => 'required|string',
-        ]);
+    // public function store(Request $request)
+    // {
+    //     $request->validate([
+    //         'movie_logo' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+    //         'movie_name' => 'required|string',
+    //         'types' => 'required|string',
+    //     ]);
 
-        $types = json_decode($request->input('types'), true);
+    //     $types = json_decode($request->input('types'), true);
 
-        if (!is_array($types)) {
-            return back()->with('error', 'Invalid JSON format in Movie Types field.');
-        }
+    //     if (!is_array($types)) {
+    //         return back()->with('error', 'Invalid JSON format in Movie Types field.');
+    //     }
 
-        // Move image to public/image/
-        $filename = time() . '_' . $request->file('movie_logo')->getClientOriginalName();
-        $request->file('movie_logo')->move(public_path('image'), $filename);
+    //     // Move image to public/image/
+    //     $filename = time() . '_' . $request->file('movie_logo')->getClientOriginalName();
+    //     $request->file('movie_logo')->move(public_path('image'), $filename);
 
-        // ✅ Use URL::to to get full global path
-        $url = URL::to('/image/' . $filename);
+    //     // ✅ Use URL::to to get full global path
+    //     $url = URL::to('/image/' . $filename);
 
-        $movie = Movie::create([
-            'movie_logo' => $url,
-            'movie_name' => $request->movie_name,
-        ]);
+    //     $movie = Movie::create([
+    //         'movie_logo' => $url,
+    //         'movie_name' => $request->movie_name,
+    //     ]);
 
-        $this->syncVersions($movie, $types);
+    //     $this->syncVersions($movie, $types);
 
-        return redirect('/movies')->with('success', 'Movie created successfully!');
-    }
+    //     return redirect('/movies')->with('success', 'Movie created successfully!');
+    // }
 
     // Show edit movie form (Blade)
     public function edit($id)
