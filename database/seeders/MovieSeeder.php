@@ -18,7 +18,7 @@ class MovieSeeder extends Seeder
     public function run(): void
     {
         $movie = Movie::create([
-            'movie_logo' => URL::to('/image/battle through the heavens.png'),
+            'movie_logo' => URL::to('/image/1750489714_a.jpg'),
             'movie_name' => 'battle through the heavens',
         ]);
 

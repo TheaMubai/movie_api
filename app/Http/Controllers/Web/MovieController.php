@@ -66,27 +66,29 @@ class MovieController extends Controller
             'types' => 'required|string',
         ]);
 
-        // Decode types JSON string to array
         $types = json_decode($request->input('types'), true);
 
         if (!is_array($types)) {
             return back()->with('error', 'Invalid JSON format in Movie Types field.');
         }
 
-        // Upload image to Cloudinary and get global URL
-        $uploadedFileUrl = Cloudinary::upload($request->file('movie_logo')->getRealPath())->getSecurePath();
+        // Move image to public/image/
+        $filename = time() . '_' . $request->file('movie_logo')->getClientOriginalName();
+        $request->file('movie_logo')->move(public_path('image'), $filename);
 
-        // Create movie with Cloudinary URL
+        // ✅ Use global domain from APP_URL instead of local request
+        $url = config('app.url') . '/image/' . $filename;
+
         $movie = Movie::create([
-            'movie_logo' => $uploadedFileUrl,
+            'movie_logo' => $url,
             'movie_name' => $request->movie_name,
         ]);
 
-        // Sync versions (nested data)
         $this->syncVersions($movie, $types);
 
         return redirect('/movies')->with('success', 'Movie created successfully!');
     }
+
 
 
     // public function store(Request $request)
@@ -129,51 +131,58 @@ class MovieController extends Controller
         return view('movies.edit', ['movie' => $movieData]);
     }
 
-    // Update movie (handle PUT)
-
-    //    use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
-
     public function update(Request $request, $id)
     {
-        $movie = Movie::findOrFail($id);
-
         $request->validate([
             'movie_name' => 'required|string',
             'movie_logo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-            'types' => 'required|string',
+            'types' => 'nullable|string', // Optional, but must be valid JSON if present
         ]);
 
-        // Decode JSON types input
-        $types = json_decode($request->input('types'), true);
-        if (!is_array($types)) {
-            return back()->with('error', 'Invalid JSON format in Movie Types field.');
-        }
+        $movie = Movie::findOrFail($id);
 
-        // Update movie name
-        $movie->movie_name = $request->movie_name;
+        $data = [
+            'movie_name' => $request->movie_name,
+        ];
 
-        // If new image uploaded, upload to Cloudinary and update URL
+        // ✅ If a new logo is uploaded, store it and set full global URL
         if ($request->hasFile('movie_logo')) {
-            $uploadedFileUrl = Cloudinary::upload($request->file('movie_logo')->getRealPath())->getSecurePath();
-            $movie->movie_logo = $uploadedFileUrl;
+            $filename = time() . '_' . $request->file('movie_logo')->getClientOriginalName();
+            $request->file('movie_logo')->move(public_path('image'), $filename);
+
+            // 👇 Use global APP_URL instead of local URL::to()
+            $data['movie_logo'] = config('app.url') . '/image/' . $filename;
+            // or: $data['movie_logo'] = env('APP_URL') . '/image/' . $filename;
         }
 
-        $movie->save();
+        // Update movie name (and logo if uploaded)
+        $movie->update($data);
 
-        // Remove old nested versions/seasons/episodes before syncing new data
-        foreach ($movie->versions as $version) {
-            foreach ($version->seasons as $season) {
-                $season->episodes()->delete();
+        // ✅ Handle nested structure (versions, seasons, episodes)
+        if ($request->filled('types')) {
+            $types = json_decode($request->input('types'), true);
+
+            if (!is_array($types)) {
+                return back()->with('error', 'Invalid JSON format in Movie Types field.');
             }
-            $version->seasons()->delete();
-        }
-        $movie->versions()->delete();
 
-        // Sync new nested data
-        $this->syncVersions($movie, $types);
+            // Delete old nested data
+            foreach ($movie->versions as $version) {
+                foreach ($version->seasons as $season) {
+                    $season->episodes()->delete();
+                }
+                $version->seasons()->delete();
+            }
+            $movie->versions()->delete();
+
+            // Recreate new nested structure
+            $this->syncVersions($movie, $types);
+        }
 
         return redirect('/movies')->with('success', 'Movie updated successfully!');
     }
+
+
 
     // public function update(Request $request, $id)
     // {
