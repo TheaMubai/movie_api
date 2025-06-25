@@ -4,7 +4,7 @@
 <div class="container">
     <h2>Add New Movie</h2>
     
-    <form action="{{ url('/movies') }}" method="POST" enctype="multipart/form-data">
+    <form action="{{ url('/movies') }}" method="POST">
         @csrf
         <div class="mb-3">
             <label class="form-label">Movie Name</label>
@@ -12,8 +12,8 @@
         </div>
 
         <div class="mb-3">
-            <label class="form-label">Movie Logo</label>
-            <input type="file" name="movie_logo" class="form-control" accept="image/*" required>
+            <label class="form-label">Movie Logo (Image URL)</label>
+            <input type="text" name="movie_logo" class="form-control" placeholder="https://example.com/logo.jpg" required>
         </div>
 
         <div class="alert alert-info">

@@ -4,7 +4,7 @@
 <div class="container">
     <h2>Edit Movie: {{ $movie['movie_name'] }}</h2>
 
-    <form action="{{ url("/movies/{$movie['movie_id']}") }}" method="POST" enctype="multipart/form-data">
+    <form action="{{ url("/movies/{$movie['movie_id']}") }}" method="POST">
         @csrf
         @method('PUT')
 
@@ -14,8 +14,8 @@
         </div>
 
         <div class="mb-3">
-            <label class="form-label">Replace Logo (optional)</label>
-            <input type="file" name="movie_logo" class="form-control" accept="image/*">
+            <label class="form-label">Movie Logo URL</label>
+            <input type="text" name="movie_logo" class="form-control" value="{{ $movie['movie_logo'] }}" required>
             <small>Current: <img src="{{ $movie['movie_logo'] }}" style="max-height: 60px;"></small>
         </div>
 
